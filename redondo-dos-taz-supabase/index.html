@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redondo dos Taz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Chakra+Petch:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/stack-tables.js"></script>
+</head>
+<body>
+<header class="band"><div class="wrap">
+  <div class="hero">
+    <svg class="emblem" viewBox="0 0 120 120" aria-hidden="true">
+      <defs><linearGradient id="tw" x1="0" x2="1"><stop offset="0" stop-color="#8f0f14"/><stop offset=".5" stop-color="#ff3a40"/><stop offset="1" stop-color="#8f0f14"/></linearGradient>
+        <linearGradient id="br" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f2d27a"/><stop offset="1" stop-color="#9a7224"/></linearGradient></defs>
+      <circle cx="60" cy="60" r="55" fill="#120708" stroke="#e3242b" stroke-width="4"/>
+      <circle cx="60" cy="60" r="47" fill="none" stroke="#e3242b" stroke-width="1" stroke-dasharray="3 5" opacity=".7"/>
+      <g fill="none" stroke="url(#tw)" stroke-linecap="round">
+        <ellipse cx="58" cy="34" rx="30" ry="7" stroke-width="5"/><ellipse cx="61" cy="47" rx="24" ry="6" stroke-width="5"/>
+        <ellipse cx="57" cy="59" rx="18" ry="5" stroke-width="4.5"/><ellipse cx="61" cy="70" rx="12" ry="4" stroke-width="4"/>
+        <ellipse cx="58" cy="80" rx="7" ry="3" stroke-width="3.5"/><path d="M59 84 q3 6 -1 12" stroke-width="3"/></g>
+      <g transform="rotate(-35 24 88)"><rect x="18" y="80" width="11" height="20" rx="2" fill="url(#br)"/><rect x="18" y="98" width="11" height="3" fill="#6d5019"/></g>
+      <g transform="rotate(28 96 86)"><rect x="91" y="78" width="11" height="20" rx="2" fill="url(#br)"/><rect x="91" y="96" width="11" height="3" fill="#6d5019"/></g>
+    </svg>
+    <div><h1 class="brand">Redondo <b>dos Taz</b></h1>
+    <p class="sub">Bolão do Major de Singapura 2026</p></div>
+  </div><p class="sub" id="prize">Acerte quem vence cada partida. Quem somar mais pontos até a final leva a skin.</p>
+  <div class="status" id="status"><span class="pill">Carregando…</span></div>
+  <nav id="tabs">
+    <button class="tab" data-v="palpites">Palpites</button>
+    <button class="tab" data-v="ranking">Ranking</button>
+    <button class="tab" data-v="resultados">Resultados</button>
+    <button class="tab" data-v="regras">Regras</button>
+    <button class="tab" data-v="admin" id="tabAdmin" hidden>Admin</button>
+  </nav>
+</div></header>
+
+<main class="band"><div class="wrap">
+  <section class="view" id="v-login">
+    <div class="login card">
+      <h2>Entrar no Redondo</h2>
+      <p class="note" id="loginMsg">Você entrou com seu e-mail e senha: ninguém consegue palpitar no seu nome. Escolha como você vai aparecer no ranking.</p>
+      <form id="loginForm"><label for="loginName" class="note">Apelido</label><br>
+        <input id="loginName" maxlength="30" required placeholder="Ex.: Taz Mestre" autocomplete="nickname">
+        <button class="btn pri" type="submit" id="loginBtn">Entrar</button></form>
+    </div>
+  </section>
+
+  <section class="view" id="v-palpites">
+    <p class="note" id="saveState"></p>
+    <div id="editingFor" class="note"></div>
+    <div id="upcoming"></div>
+  </section>
+
+  <section class="view" id="v-ranking">
+    <h2>Ranking</h2>
+    <div class="scroll"><table class="stack"><thead><tr><th>#</th><th>Jogador</th><th class="r">Acertos</th><th class="r">Placares exatos</th><th class="r">Pontos</th></tr></thead><tbody id="rank"></tbody></table></div>
+    <p class="note">Desempate: mais placares exatos, depois mais acertos. Os palpites de cada um aparecem quando a partida fecha para palpites.</p>
+  </section>
+
+  <section class="view" id="v-resultados">
+    <h2>Resultados</h2>
+    <div id="past"></div>
+  </section>
+
+  <section class="view" id="v-regras">
+    <div class="grid2">
+      <div class="card"><h2>Como funciona</h2><ul class="plain">
+        <li>Escolha o vencedor de cada partida até 15 minutos antes do início.</li>
+        <li>Em melhor de 3 ou de 5, você também pode cravar o placar.</li>
+        <li>Um palpite por partida: depois de confirmar, não dá para trocar.</li>
+        <li>Quando os palpites fecham, os de todo mundo ficam visíveis.</li>
+        <li>As partidas novas e os resultados entram uma vez por dia, depois do último jogo.</li>
+      </ul></div>
+      <div class="card"><h2>Pontuação por acerto</h2>
+        <table><tbody>
+          <tr><td>Stage 1 e 2, melhor de 1</td><td class="r num">1</td></tr>
+          <tr><td>Stage 1 e 2, melhor de 3 (classificação ou eliminação)</td><td class="r num">2</td></tr>
+          <tr><td>Stage 3 (melhor de 3)</td><td class="r num">2</td></tr>
+          <tr><td>Quartas de final</td><td class="r num">3</td></tr>
+          <tr><td>Semifinal</td><td class="r num">4</td></tr>
+          <tr><td>Disputa de 3º lugar</td><td class="r num">3</td></tr>
+          <tr><td>Final</td><td class="r num">5</td></tr>
+          <tr><td>Placar exato (bônus)</td><td class="r num">+1</td></tr>
+        </tbody></table>
+        <p class="note">O valor de cada partida aparece no cartão dela.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-admin">
+    <div class="card"><h2>Palpitar por um amigo</h2>
+      <p class="note">Para quem não consegue entrar na página: crie um participante manual e registre os palpites dele.</p>
+      <div class="tools"><select id="aWho" aria-label="Participante"></select><button class="btn" id="aEdit">Palpitar por ele</button></div>
+      <div class="tools"><input id="aNew" placeholder="Nome do amigo"><button class="btn" id="aCreate">Criar participante</button></div>
+    </div>
+    <div class="card"><h2>Adicionar partida</h2>
+      <div class="tools">
+        <input id="nA" placeholder="Time A"><input id="nB" placeholder="Time B">
+        <input id="nStart" type="datetime-local" aria-label="Início (seu horário)">
+      </div>
+      <div class="tools">
+        <select id="nStage"><option>Stage 1</option><option>Stage 2</option><option>Stage 3</option><option>Quartas</option><option>Semifinal</option><option>3º lugar</option><option>Final</option></select>
+        <select id="nBo"><option value="1">Melhor de 1</option><option value="3">Melhor de 3</option><option value="5">Melhor de 5</option></select>
+        <input id="nPts" type="number" min="1" max="10" value="1" aria-label="Pontos">
+        <button class="btn pri" id="nAdd">Adicionar</button>
+      </div>
+    </div>
+    <div class="card"><h2>Resultados do dia</h2>
+      <p class="note">No fim do dia, marque o vencedor e o placar de cada jogo e salve tudo de uma vez. Dá para corrigir depois.</p>
+      <div class="tools"><select id="rDay" aria-label="Dia dos jogos"></select></div>
+      <div id="adminRes"></div>
+      <div class="tools"><button class="btn pri" id="rSaveAll">Salvar resultados do dia</button><span class="note" id="rMsg" style="align-self:center"></span></div>
+    </div>
+  </section>
+</div></main>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/supabase-adapter.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

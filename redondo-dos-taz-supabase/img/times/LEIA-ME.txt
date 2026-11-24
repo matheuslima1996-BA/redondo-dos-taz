@@ -1,0 +1,2 @@
+Coloque aqui as logos dos times, uma por arquivo, com os nomes listados no README.md da raiz.
+Formato PNG, de preferência 128x128 com fundo transparente.
