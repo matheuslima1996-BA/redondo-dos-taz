@@ -48,43 +48,12 @@ semi = 4; 3º lugar = 3; final = 5). Placar exato em MD3/MD5 = +1.
 Desempate: placares exatos, depois acertos.
 
 ## Logos dos times
-Coloque os arquivos em `img/times/`. Cada cartão de confronto mostra a logo acima do nome do time;
-se o arquivo não existir, aparece o selo colorido com a sigla. Para usar outro formato (ex.: .webp),
-mude `LOGO_EXT` no topo da seção "LOGOS DOS TIMES" em `js/app.js`.
+Na aba **Admin > Logos dos times**, toque em **Enviar** ao lado do time e escolha a imagem.
+Ela é reduzida para 256 px, salva no Supabase (pasta "logos") e aparece acima do nome do time.
 
-| Time | Arquivo |
-|---|---|
-| Ninjas in Pyjamas | `ninjasinpyjamas.png` |
-| Liquid | `liquid.png` |
-| HEROIC | `heroic.png` |
-| M80 | `m80.png` |
-| Eternal Fire | `eternalfire.png` |
-| 100 Thieves | `100thieves.png` |
-| PARIVISION | `parivision.png` |
-| FaZe | `faze.png` |
-| Wildcard | `wildcard.png` |
-| Lynn Vision | `lynnvision.png` |
-| Imperial | `imperial.png` |
-| FlyQuest | `flyquest.png` |
-| 9z | `9z.png` |
-| DENDELE | `dendele.png` |
-| BC.Game | `bcgame.png` |
-| Chinggis Warriors | `chinggiswarriors.png` |
-| Spirit | `spirit.png` |
-| Vitality | `vitality.png` |
-| FURIA | `furia.png` |
-| MOUZ | `mouz.png` |
-| Aurora | `aurora.png` |
-| Falcons | `falcons.png` |
-| Legacy | `legacy.png` |
-| BetBoom | `betboom.png` |
-| FUT | `fut.png` |
-| NAVI | `navi.png` |
-| 1win | `1win.png` |
-| MIBR | `mibr.png` |
-| Nemiga | `nemiga.png` |
-| G2 | `g2.png` |
-| Astralis | `astralis.png` |
-| The MongolZ | `themongolz.png` |
+## Administradores
+Na aba **Admin > Administradores**, adicione o e-mail de quem também pode cadastrar partidas,
+lançar resultados e trocar logos. A pessoa entra no site com esse e-mail. O último admin não pode ser removido.
 
-Se a tarefa diária cadastrar um time com nome diferente, o arquivo é o nome em minúsculas, só com letras e números.
+## Atualização de 24/11 (rodar uma vez)
+Se o banco foi criado antes desta versão, rode `atualizacao-admins-logos.sql` no SQL Editor.

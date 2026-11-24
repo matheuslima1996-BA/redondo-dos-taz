@@ -96,6 +96,15 @@
       <div class="tools"><select id="aWho" aria-label="Participante"></select><button class="btn" id="aEdit">Palpitar por ele</button></div>
       <div class="tools"><input id="aNew" placeholder="Nome do amigo"><button class="btn" id="aCreate">Criar participante</button></div>
     </div>
+    <div class="card"><h2>Logos dos times</h2>
+      <p class="note">Envie uma imagem para cada time (PNG com fundo transparente fica melhor). Ela é ajustada para 256 px e aparece acima do nome do time em todos os cartões.</p>
+      <div id="logoGrid" class="lgrid"></div>
+    </div>
+    <div class="card"><h2>Administradores</h2>
+      <p class="note">Admins podem cadastrar partidas, lançar resultados e trocar logos. A pessoa entra no site com o e-mail cadastrado aqui (pode criar a conta antes ou depois).</p>
+      <div id="adminList"></div>
+      <div class="tools"><input id="admEmail" type="email" placeholder="E-mail do novo admin"><button class="btn pri" id="admAdd">Adicionar admin</button></div>
+    </div>
     <div class="card"><h2>Adicionar partida</h2>
       <div class="tools">
         <input id="nA" placeholder="Time A"><input id="nB" placeholder="Time B">

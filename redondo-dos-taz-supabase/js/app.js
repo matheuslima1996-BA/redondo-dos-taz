@@ -7,14 +7,14 @@ const hm=iso=>new Date(iso).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2
 const when=iso=>new Date(iso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const TEAMS={'Ninjas in Pyjamas':['NIP','#c8a200'],'Liquid':['TL','#0b2a4a'],'HEROIC':['HRC','#e2631c'],'M80':['M80','#141414'],'Eternal Fire':['EF','#d01f2e'],'100 Thieves':['100T','#d11f2a'],'PARIVISION':['PARI','#6b2fd1'],'FaZe':['FaZe','#d6202b'],'Wildcard':['WC','#1f9a7a'],'Lynn Vision':['LVG','#2b5fb3'],'Imperial':['IMP','#a8862c'],'FlyQuest':['FLY','#1e7a3e'],'9z':['9z','#1b1b1b'],'DENDELE':['DEN','#2f8ac6'],'BC.Game':['GOSH','#2fa65a'],'Chinggis Warriors':['CW','#b51e2b'],'Spirit':['SPR','#3a3a3a'],'Vitality':['VIT','#e2b500'],'FURIA':['FUR','#1c1c1c'],'MOUZ':['MOUZ','#d9233b'],'Aurora':['AUR','#4a2a8c'],'Falcons':['FAL','#0e8a52'],'Legacy':['LGC','#2462c9'],'BetBoom':['BB','#c41e2a'],'FUT':['FUT','#e2312a'],'NAVI':['NAVI','#d6b300'],'1win':['1W','#2a5bd7'],'MIBR':['MIBR','#1d1d1d'],'Nemiga':['NEM','#2a2a2a'],'G2':['G2','#6b6b6b'],'Astralis':['AST','#d4272e'],'The MongolZ':['MGZ','#c8102e']};
 /* ===== LOGOS DOS TIMES =====
-   Coloque cada logo em img/times/ com o nome de arquivo da lista do README (ex.: img/times/nip.png).
-   Tamanho sugerido: 128x128, fundo transparente. Se o arquivo não existir, aparece o selo colorido. */
-const LOGO_DIR='img/times/',LOGO_EXT='png';
+   As logos são enviadas pela aba Admin e ficam no Supabase Storage (bucket "logos").
+   O documento league/logos guarda quais times têm logo e a versão de cada uma. */
+let LOGOS={};
 const slugOf=n=>String(n||'').toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g,'');
-const tag=n=>{const t=TEAMS[n]||[String(n||'?').replace(/[^A-Za-z0-9]/g,'').slice(0,4).toUpperCase(),'#5a2a2c'];
-  return '<span class="crest"><img class="tlogo" src="'+esc(LOGO_DIR+slugOf(n)+'.'+LOGO_EXT)+'" alt=""><span class="badge" style="background:'+t[1]+'">'+esc(t[0])+'</span></span>'};
-document.addEventListener('load',e=>{if(e.target.classList?.contains('tlogo'))e.target.parentNode.classList.add('has-logo')},true);
-document.addEventListener('error',e=>{if(e.target.classList?.contains('tlogo'))e.target.remove()},true);
+const logoUrl=s=>LOGOS[s]&&window.redondoLogoUrl?window.redondoLogoUrl(s,LOGOS[s]):'';
+const tag=n=>{const t=TEAMS[n]||[String(n||'?').replace(/[^A-Za-z0-9]/g,'').slice(0,4).toUpperCase(),'#5a2a2c'];const u=logoUrl(slugOf(n));
+  return '<span class="crest'+(u?' has-logo':'')+'">'+(u?'<img class="tlogo" src="'+esc(u)+'" alt="">':'')+'<span class="badge" style="background:'+t[1]+'">'+esc(t[0])+'</span></span>'};
+document.addEventListener('error',e=>{if(e.target.classList?.contains('tlogo')){e.target.parentNode.classList.remove('has-logo');e.target.remove()}},true);
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2600)};
 
 let db=null,user=null,me=null,isOwner=false,canWrite=false;
@@ -92,7 +92,7 @@ function renderPast(){
   const g=groupByDay(list),b=mine();
   $('#past').innerHTML=Object.keys(g).sort().reverse().map(k=>'<h3>'+esc(k==='sem data'?k:dayLabel(k))+'</h3><div class="matches">'+g[k].map(m=>card(m,b,true)).join('')+'</div>').join('')}
 
-function renderAdmin(){if(!isOwner)return;
+function renderAdmin(){if(!isOwner)return;renderLogos();renderAdmins();
   const s=$('#aWho'),cur=s.value||editId;
   s.innerHTML='<option value="'+esc(me)+'">Eu</option>'+bets.filter(b=>b.id!==me).map(b=>'<option value="'+esc(b.id)+'">'+esc(nameOf(b))+'</option>').join('');
   s.value=cur;
@@ -121,6 +121,32 @@ $('#rSaveAll').addEventListener('click',async()=>{const ids=Object.keys(resDraft
     try{await db.doc('matches/'+id).update({winner:d.w||null,score:s});n++}catch(e){err++}}
   resDraft={};$('#rSaveAll').disabled=false;$('#rMsg').textContent=err?err+' jogo(s) não salvaram. Tente de novo.':(n?n+' resultado(s) salvos. Ranking atualizado.':'Nada para salvar.');renderAdmin()});
 
+/* ---- Admin: logos ---- */
+function teamList(){const s=new Set(Object.keys(TEAMS));for(const m of matches){if(m.a)s.add(m.a);if(m.b)s.add(m.b)}return [...s].sort((x,y)=>x.localeCompare(y))}
+function renderLogos(){const el=$('#logoGrid');if(!el||el.contains(document.activeElement)&&document.activeElement.type==='file')return;
+  el.innerHTML=teamList().map(n=>{const s=slugOf(n);return '<div class="lrow">'+tag(n)+'<b>'+esc(n)+'</b>'+
+    '<label class="btn">'+(LOGOS[s]?'Trocar':'Enviar')+'<input type="file" accept="image/*" data-logo="'+esc(n)+'" hidden></label>'+
+    (LOGOS[s]?'<button class="btn" data-logodel="'+esc(n)+'">Remover</button>':'')+'</div>'}).join('')}
+async function toPng(file){const img=await createImageBitmap(file);const max=256,r=Math.min(1,max/Math.max(img.width,img.height));
+  const c=document.createElement('canvas');c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  return new Promise(ok=>c.toBlob(ok,'image/png'))}
+async function setLogos(next){const s=await db.doc('league/logos').get();if(s.exists)await db.doc('league/logos').set(next);else await db.doc('league/logos').set(next)}
+document.addEventListener('change',async e=>{const i=e.target.closest('[data-logo]');if(!i||!i.files[0])return;const n=i.dataset.logo,s=slugOf(n);
+  if(i.files[0].size>5e6){toast('Imagem muito grande (máx. 5 MB).');return}
+  toast('Enviando logo de '+n+'…');
+  try{const png=await toPng(i.files[0]);await window.redondoUpload(s,png);await setLogos({...LOGOS,[s]:Date.now()});toast('Logo de '+n+' salva!')}
+  catch(err){toast('Não deu para enviar: '+(err&&err.message||err))}});
+document.addEventListener('click',async e=>{const d=e.target.closest('[data-logodel]');if(!d)return;const n=d.dataset.logodel,s=slugOf(n);
+  try{await window.redondoRemoveLogo(s);const next={...LOGOS};delete next[s];await setLogos(next);toast('Logo removida.')}catch(err){toast('Erro ao remover.')}});
+/* ---- Admin: administradores ---- */
+let adminList=[];
+async function loadAdmins(){try{adminList=await window.redondoAdmins.list()}catch(e){adminList=[]}renderAdmins()}
+function renderAdmins(){const el=$('#adminList');if(!el)return;
+  el.innerHTML=adminList.map(x=>'<div class="lrow"><b>'+esc(x)+'</b>'+(adminList.length>1?'<button class="btn" data-admdel="'+esc(x)+'">Remover</button>':'<span class="note">único admin</span>')+'</div>').join('')||'<p class="note">Carregando…</p>'}
+$('#admAdd').addEventListener('click',async()=>{const v=$('#admEmail').value.trim().toLowerCase();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){toast('Digite um e-mail válido.');return}
+  try{await window.redondoAdmins.add(v);$('#admEmail').value='';toast(v+' agora é admin.');loadAdmins()}catch(e){toast('Não deu para adicionar: '+(e&&e.message||e))}});
+document.addEventListener('click',async e=>{const d=e.target.closest('[data-admdel]');if(!d)return;
+  try{await window.redondoAdmins.remove(d.dataset.admdel);toast('Admin removido.');loadAdmins()}catch(err){toast('Erro ao remover.')}});
 function renderAll(){show();renderStatus();renderUpcoming();renderRank();renderPast();renderAdmin()}
 
 /* saving picks */
@@ -173,10 +199,11 @@ async function loadProfiles(){if(!user)return;const ids=bets.filter(b=>!b.manual
 (async()=>{
   user=await claude.use('user');db=await claude.use('db');
   if(user){me=await user.id();isOwner=(await user.isOwner())??false;const cw=await user.can('data.write');canWrite=cw===null?true:!!cw}
-  editId=me;$('#tabAdmin').hidden=!isOwner;show();
+  editId=me;$('#tabAdmin').hidden=!isOwner;show();if(isOwner)loadAdmins();
   if(!db){$('#status').innerHTML='<span class="pill">Falta configurar o Supabase (js/supabase-config.js).</span>';loaded=true;renderAll();return}
   const t=setTimeout(()=>{if(!loaded)$('#status').innerHTML='<span class="pill">Não consegui carregar o bolão ainda. Verifique a conexão.</span>'},10000);
   db.doc('league/config').onSnapshot(s=>{cfg=s.exists?s.data():null;renderStatus()},()=>{});
+  db.doc('league/logos').onSnapshot(s=>{LOGOS=s.exists?{...s.data()}:{};renderAll()},()=>{});
   db.collection('matches').onSnapshot(s=>{matches=s.docs.map(d=>({id:d.id,...d.data()}));if(!s.metadata.fromCache){loaded=true;clearTimeout(t)}renderAll()},()=>{loaded=true;clearTimeout(t);renderAll()});
   db.collection('picks').onSnapshot(s=>{bets=s.docs.map(d=>({id:d.id,...d.data()}));betsLoaded=true;if(!saving&&!timer)local=null;renderAll();loadProfiles()},()=>{});
 })();

@@ -95,3 +95,11 @@ ul.plain{list-style:none;padding:0;margin:0}ul.plain li{padding:4px 0}
 #fbGate .brand{font-size:40px;margin:0 0 10px}
 #fbGate input{width:100%;margin-top:10px}
 #fbGate .btn{width:100%;margin-top:12px}
+
+/* Admin: logos e administradores */
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:8px}
+.lrow{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--line);border-radius:10px;flex-wrap:wrap}
+.lrow b{flex:1 1 120px}
+.lrow .crest{width:44px;height:44px;margin:0}
+.lrow label.btn{display:inline-flex;align-items:center}
+#adminList .lrow{margin-bottom:8px}

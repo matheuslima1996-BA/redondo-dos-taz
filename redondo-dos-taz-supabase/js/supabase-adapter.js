@@ -103,6 +103,16 @@
     })
   };
 
+  /* Logos (Supabase Storage, bucket "logos") e lista de admins */
+  window.redondoLogoUrl = (slug, ver) => url + '/storage/v1/object/public/logos/' + encodeURIComponent(slug) + '.png?v=' + encodeURIComponent(ver);
+  window.redondoUpload = async (slug, blob) => { const {error} = await sb.storage.from('logos').upload(slug + '.png', blob, {upsert:true, contentType:'image/png', cacheControl:'60'}); if(error) throw error; };
+  window.redondoRemoveLogo = async slug => { const {error} = await sb.storage.from('logos').remove([slug + '.png']); if(error) throw error; };
+  window.redondoAdmins = {
+    list: async () => { const {data, error} = await sb.from('admins').select('email').order('email'); if(error) throw error; return data.map(r => r.email); },
+    add: async email => { const {error} = await sb.from('admins').insert({email: String(email).toLowerCase()}); if(error) throw error; },
+    remove: async email => { const {error} = await sb.from('admins').delete().eq('email', email); if(error) throw error; }
+  };
+
   window.claude = {
     use: async name => {
       if(!ready) return null;
@@ -110,7 +120,7 @@
       if(name === 'db') return dbApi;
       if(name === 'user') return {
         id: async () => u.id,
-        isOwner: async () => admins.includes(String(u.email || '').toLowerCase()),
+        isOwner: async () => { const {data, error} = await sb.rpc('is_admin'); return error ? admins.includes(String(u.email || '').toLowerCase()) : !!data; },
         can: async () => true,
         profiles: async ids => Object.fromEntries(ids.map(id => [id, {name: ''}]))
       };
