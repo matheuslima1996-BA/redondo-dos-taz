@@ -45,13 +45,8 @@
     sb.auth.getSession().then(({data}) => done(data.session));
     sb.auth.onAuthStateChange((ev, s) => { if(ev === 'SIGNED_OUT') location.reload(); else if(s && !user) done(s); });
   });
-  function addLogout(){
-    if(document.getElementById('sbOut')) return;
-    const add = () => { const nav = document.getElementById('tabs'); if(!nav) return;
-      const b = document.createElement('button'); b.className = 'tab'; b.id = 'sbOut'; b.textContent = 'Sair';
-      b.addEventListener('click', e => { e.stopPropagation(); sb.auth.signOut(); }); nav.appendChild(b); };
-    document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', add) : add();
-  }
+  function addLogout(){}
+
 
   /* ---------- Banco de dados (tabela docs: col, id, data) ---------- */
   const errOf = e => ({ code: (e && (e.code === '42501' || e.code === 'P0001' || /row-level security/i.test(e.message||''))) ? 'invalid_argument' : 'unavailable', message: String(e && e.message || e) });
@@ -107,6 +102,10 @@
   window.redondoLogoUrl = (slug, ver) => url + '/storage/v1/object/public/logos/' + encodeURIComponent(slug) + '.png?v=' + encodeURIComponent(ver);
   window.redondoUpload = async (slug, blob) => { const {error} = await sb.storage.from('logos').upload(slug + '.png', blob, {upsert:true, contentType:'image/png', cacheControl:'60'}); if(error) throw error; };
   window.redondoRemoveLogo = async slug => { const {error} = await sb.storage.from('logos').remove([slug + '.png']); if(error) throw error; };
+  window.redondoAvatarUrl = (uid, ver) => url + '/storage/v1/object/public/avatars/' + encodeURIComponent(uid) + '.png?v=' + encodeURIComponent(ver);
+  window.redondoUploadAvatar = async blob => { if(!user) throw new Error('não logado'); const {error} = await sb.storage.from('avatars').upload(user.id + '.png', blob, {upsert:true, contentType:'image/png', cacheControl:'60'}); if(error) throw error; };
+  window.redondoSignOut = () => sb.auth.signOut();
+  window.redondoEmail = () => user ? user.email : '';
   window.redondoAdmins = {
     list: async () => { const {data, error} = await sb.from('admins').select('email').order('email'); if(error) throw error; return data.map(r => r.email); },
     add: async email => { const {error} = await sb.from('admins').insert({email: String(email).toLowerCase()}); if(error) throw error; },
