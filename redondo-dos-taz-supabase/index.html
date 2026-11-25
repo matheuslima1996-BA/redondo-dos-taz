@@ -5,37 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Redondo dos Taz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Chakra+Petch:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/stack-tables.js"></script>
 </head>
 <body>
-<header class="band"><div class="wrap">
-  <div class="hero">
-    <img class="emblem emblem-img" src="img/logo.png" alt="" onerror="this.remove()">
-    <svg class="emblem" viewBox="0 0 120 120" aria-hidden="true">
-      <defs><linearGradient id="tw" x1="0" x2="1"><stop offset="0" stop-color="#8f0f14"/><stop offset=".5" stop-color="#ff3a40"/><stop offset="1" stop-color="#8f0f14"/></linearGradient>
-        <linearGradient id="br" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f2d27a"/><stop offset="1" stop-color="#9a7224"/></linearGradient></defs>
-      <circle cx="60" cy="60" r="55" fill="#120708" stroke="#e3242b" stroke-width="4"/>
-      <circle cx="60" cy="60" r="47" fill="none" stroke="#e3242b" stroke-width="1" stroke-dasharray="3 5" opacity=".7"/>
-      <g fill="none" stroke="url(#tw)" stroke-linecap="round">
-        <ellipse cx="58" cy="34" rx="30" ry="7" stroke-width="5"/><ellipse cx="61" cy="47" rx="24" ry="6" stroke-width="5"/>
-        <ellipse cx="57" cy="59" rx="18" ry="5" stroke-width="4.5"/><ellipse cx="61" cy="70" rx="12" ry="4" stroke-width="4"/>
-        <ellipse cx="58" cy="80" rx="7" ry="3" stroke-width="3.5"/><path d="M59 84 q3 6 -1 12" stroke-width="3"/></g>
-      <g transform="rotate(-35 24 88)"><rect x="18" y="80" width="11" height="20" rx="2" fill="url(#br)"/><rect x="18" y="98" width="11" height="3" fill="#6d5019"/></g>
-      <g transform="rotate(28 96 86)"><rect x="91" y="78" width="11" height="20" rx="2" fill="url(#br)"/><rect x="91" y="96" width="11" height="3" fill="#6d5019"/></g>
-    </svg>
-    <div><h1 class="brand">Redondo <b>dos Taz</b></h1>
-    <p class="sub">Bolão do Major de Singapura 2026</p></div>
-  </div><p class="sub" id="prize">Acerte quem vence cada partida. Quem somar mais pontos até a final leva a skin.</p>
-  <div class="status" id="status"><span class="pill">Carregando…</span></div>
-  <nav id="tabs">
-    <button class="tab" data-v="palpites">Palpites</button>
-    <button class="tab" data-v="ranking">Ranking</button>
-    <button class="tab" data-v="resultados">Resultados</button>
-    <button class="tab" data-v="regras">Regras</button>
-    <button class="tab" data-v="admin" id="tabAdmin" hidden>Admin</button>
-  </nav>
+<div class="ticker" aria-label="Placar ao vivo"><div class="tk-track" id="tkTrack"><span class="tk-item">Carregando placares…</span></div></div>
+<header class="top"><div class="wrap topbar">
+  <a class="brandlink" href="#palpites" aria-label="Redondo dos Taz — início">
+    <span class="logo-box"><img src="img/logo.png" alt="" onerror="this.parentNode.classList.add('nologo');this.remove()"><span class="logo-fb">RT</span></span>
+    <span class="brand-txt"><span class="brand">REDONDO <b>DOS TAZ</b></span><span class="sub">Bolão do Major de Singapura 2026</span></span>
+  </a>
+  <nav id="tabs"><button class="tab" data-v="palpites"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Palpites</span></button><button class="tab" data-v="ranking"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3a3 3 0 0 1-3 4M7 5H4a3 3 0 0 0 3 4"/></svg><span>Ranking</span></button><button class="tab" data-v="resultados"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Resultados</span></button><button class="tab" data-v="regras"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg><span>Regras</span></button><button class="tab" data-v="admin" id="tabAdmin" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Admin</span></button></nav>
+  <button class="me-btn" id="meBtn" hidden aria-label="Meu perfil" title="Meu perfil"></button>
 </div></header>
 
 <main class="band"><div class="wrap">
@@ -50,9 +32,40 @@
   </section>
 
   <section class="view" id="v-palpites">
-    <p class="note" id="saveState"></p>
-    <div id="editingFor" class="note"></div>
-    <div id="upcoming"></div>
+    <div id="hero"></div>
+    <div class="mini" id="mini"></div>
+    <div class="cols">
+      <div class="col-main">
+        <p class="note" id="saveState"></p>
+        <div id="editingFor" class="note"></div>
+        <div id="upcoming"></div>
+        <div id="recent"></div>
+      </div>
+      <aside class="col-side">
+        <div class="card" id="podium"></div>
+        <div class="card" id="myMajor"></div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="view" id="v-perfil">
+    <div class="pf-head card">
+      <div class="pf-av"><span id="pfAvatar"></span><label class="btn">Trocar foto<input id="pfFile" type="file" accept="image/*" hidden></label></div>
+      <div class="pf-info">
+        <label for="pfName" class="note">Apelido</label>
+        <div class="tools"><input id="pfName" maxlength="30"><button class="btn" id="pfSave">Salvar</button></div>
+        <p class="note" id="pfEmail"></p>
+        <button class="btn" id="pfOut">Sair da conta</button>
+      </div>
+    </div>
+    <div class="empty" id="pfEmpty" hidden>Entre e escolha seu apelido para ver seu perfil.</div>
+    <div id="pfBody">
+      <div class="stats" id="pfStats"></div>
+      <div class="grid2">
+        <div class="card"><h2>Pontos por fase</h2><div id="pfPhase"></div></div>
+        <div class="card"><h2>Últimos palpites</h2><div class="scroll"><table class="stack"><thead><tr><th>Jogo</th><th>Seu palpite</th><th>Resultado</th><th class="r">Pts</th></tr></thead><tbody id="pfHist"></tbody></table></div></div>
+      </div>
+    </div>
   </section>
 
   <section class="view" id="v-ranking">
@@ -73,7 +86,7 @@
         <li>Em melhor de 3 ou de 5, você também pode cravar o placar.</li>
         <li>Um palpite por partida: depois de confirmar, não dá para trocar.</li>
         <li>Quando os palpites fecham, os de todo mundo ficam visíveis.</li>
-        <li>As partidas novas e os resultados entram uma vez por dia, depois do último jogo.</li>
+        <li>As partidas novas e os resultados entram sozinhos, em até 30 minutos depois de definidos.</li>
       </ul></div>
       <div class="card"><h2>Pontuação por acerto</h2>
         <table><tbody>
