@@ -133,7 +133,7 @@ function renderUpcoming(){
 function renderRank(){
   const r=ranked();let pos=0,last=null;
   $('#rank').innerHTML=r.map((x,i)=>{const key=x.pts+'|'+x.ex+'|'+x.hit;if(key!==last){pos=i+1;last=key}
-    return '<tr class="'+(x.b.id===editId?'me ':'')+(pos===1&&x.pts>0?'lead':'')+'"><td class="num">'+pos+'º</td><td><span class="who-cell">'+avatar(x.b,30)+'<b>'+esc(nameOf(x.b))+'</b></span>'+(x.b.manual?' <span class="note">(manual)</span>':'')+'</td><td class="r num">'+x.hit+'</td><td class="r num">'+x.ex+'</td><td class="r num">'+x.pts+'</td></tr>'}).join('')||'<tr><td colspan="5" class="note">Ninguém palpitou ainda.</td></tr>'}
+    return '<tr class="'+(x.b.id===editId?'me ':'')+(pos===1&&x.pts>0?'lead':'')+'"><td class="num">'+pos+'º</td><td><span class="who-cell">'+avatar(x.b,30)+'<b>'+esc(nameOf(x.b))+'</b><span class="mis">'+medalIcons(x.b,22)+'</span></span>'+(x.b.manual?' <span class="note">(manual)</span>':'')+'</td><td class="r num">'+x.hit+'</td><td class="r num">'+x.ex+'</td><td class="r num">'+x.pts+'</td></tr>'}).join('')||'<tr><td colspan="5" class="note">Ninguém palpitou ainda.</td></tr>'}
 
 function renderPast(){
   const list=matches.filter(m=>m.winner).sort((x,y)=>Date.parse(y.start||0)-Date.parse(x.start||0));
@@ -227,7 +227,83 @@ $('#pfSave').addEventListener('click',async()=>{const n=$('#pfName').value.trim(
   try{await db.doc('picks/'+me).update({name:n});toast('Apelido salvo.')}catch(e){toast('Não deu para salvar.')}});
 $('#pfOut').addEventListener('click',()=>window.redondoSignOut&&window.redondoSignOut());
 $('#meBtn').addEventListener('click',()=>{location.hash='perfil'});
-function renderAll(){show();renderStatus();renderUpcoming();renderRank();renderPast();renderAdmin();renderMe();renderProfile()}
+/* ---- Medalhas (conquistas) ---- */
+const DECISIVE=m=>/vale vaga|elimina|Quartas|Semifinal|3º lugar|Final/i.test(m.stage||'')||(m.pts||1)>=2;
+function medalsOf(b){const got=new Set();if(!b||!b.picks)return got;const picks=b.picks;
+  const done=matches.filter(m=>m.winner&&m.start),hitsByDay={},daysAll={};let ex=0,clutch=0,cur=0,best=0;
+  for(const m of [...done].sort((x,y)=>Date.parse(x.start)-Date.parse(y.start))){const k=dayKey(m.start);(daysAll[k]=daysAll[k]||[]).push(m);
+    const p=picks[m.id];if(!p)continue;const r=betPts(m,p);
+    if(r.hit){hitsByDay[k]=(hitsByDay[k]||0)+1;cur++;best=Math.max(best,cur);if(DECISIVE(m))clutch++;
+      const ps=bets.map(x=>x.picks?.[m.id]).filter(Boolean);if(ps.length>=3&&ps.filter(q=>q.w===m.winner).length/ps.length<0.3)got.add('zebra')}else cur=0;
+    if(r.exact)ex++}
+  if(Object.values(hitsByDay).some(n=>n>=5))got.add('ace');
+  if(best>=5)got.add('fogo');if(ex>=3)got.add('crava');if(clutch>=3)got.add('clutch');
+  if(Object.keys(picks).length>=20)got.add('veterano');
+  for(const k in daysAll){const ms=daysAll[k];
+    if(ms.length>=4&&ms.every(m=>picks[m.id]&&picks[m.id].w===m.winner))got.add('profeta');
+    const sc=bets.map(x=>({id:x.id,p:ms.reduce((a,m)=>a+betPts(m,x.picks?.[m.id]).pts,0)})),mx=Math.max(...sc.map(s=>s.p));
+    if(mx>0&&sc.filter(s=>s.p===mx).length===1&&sc.find(s=>s.id===b.id)?.p===mx)got.add('rei')}
+  return got}
+let medalCache=new Map();
+function medalsCached(b){const key=b.id+'|'+matches.length+'|'+matches.filter(m=>m.winner).length+'|'+JSON.stringify(b.picks||{}).length+'|'+bets.length;
+  const c=medalCache.get(b.id);if(c&&c.key===key)return c.v;const v=medalsOf(b);medalCache.set(b.id,{key,v});return v}
+const medalIcons=(b,size)=>{const g=medalsCached(b);return window.MEDALS?MEDALS.filter(M=>g.has(M.k)).map(M=>'<span class="mi" title="'+esc(M.n)+'">'+medalSVG(M.k,'r'+slugOf(b.id)+M.k,size,false,M.n)+'</span>').join(''):''};
+function renderMedals(){const el=$('#pfMedals');if(!el||!window.MEDALS)return;const b=bets.find(x=>x.id===me);if(!b)return;const g=medalsCached(b);
+  $('#pfMedCount').textContent=g.size+' de '+MEDALS.length;
+  el.innerHTML=MEDALS.map(M=>'<div class="md'+(g.has(M.k)?' got':'')+'">'+medalSVG(M.k,'p'+M.k,96,!g.has(M.k),M.n)+'<b>'+esc(M.n)+'</b><small>'+esc(M.d)+'</small></div>').join('');
+  try{const key='redondo-medals-'+me,seen=JSON.parse(localStorage.getItem(key)||'null');const now=[...g];
+    if(seen){const nw=now.filter(k=>!seen.includes(k));if(nw.length){const M=MEDALS.find(x=>x.k===nw[0]);showMedalToast(M)}}
+    if(loaded&&betsLoaded)localStorage.setItem(key,JSON.stringify(now))}catch(e){}}
+function showMedalToast(M){const t=$('#medalToast');if(!t)return;t.innerHTML=medalSVG(M.k,'tt'+M.k,72,false,M.n)+'<div><small>NOVA MEDALHA</small><b>'+esc(M.n)+'</b><span>'+esc(M.d)+'</span></div>';t.classList.add('on');clearTimeout(t.h);t.h=setTimeout(()=>t.classList.remove('on'),6000)}
+
+/* ---- Card de compartilhar (canvas 1080x1350) ---- */
+const loadImg=(src,cors)=>new Promise(ok=>{if(!src)return ok(null);const i=new Image();if(cors)i.crossOrigin='anonymous';i.onload=()=>ok(i);i.onerror=()=>ok(null);i.src=src});
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+async function makeCard(){const b=bets.find(x=>x.id===me);if(!b)return null;
+  try{await Promise.all(['400 88px Anton','700 24px Inter','400 20px Inter'].map(f=>document.fonts.load(f)))}catch(e){}
+  const s=myStats(b),r=ranked(),pos=r.findIndex(x=>x.b.id===me)+1,g=medalsCached(b),pot=bets.length*(+cfg?.entry||10);
+  const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+  let bg=c.createRadialGradient(540,240,40,540,240,1000);bg.addColorStop(0,'#5A0E13');bg.addColorStop(.5,'#1A0809');bg.addColorStop(1,'#0A0A0C');c.fillStyle=bg;c.fillRect(0,0,W,H);
+  c.save();c.globalAlpha=.07;c.strokeStyle='#E3242B';c.lineWidth=4;for(let x=-H;x<W+H;x+=100){c.beginPath();c.moveTo(x,H);c.lineTo(x+H*0.62,0);c.stroke()}c.restore();
+  // topo
+  const logo=await loadImg('img/logo.png');c.save();c.translate(102,102);c.rotate(-6*Math.PI/180);c.shadowColor='rgba(227,36,43,.5)';c.shadowBlur=30;c.fillStyle='#E3242B';rr(c,-38,-38,76,76,20);c.fill();c.shadowBlur=0;
+  if(logo){rr(c,-38,-38,76,76,20);c.clip();c.drawImage(logo,-38,-38,76,76)}else{c.fillStyle='#fff';c.font='36px Anton';c.textAlign='center';c.textBaseline='middle';c.fillText('RT',0,2)}c.restore();
+  c.textBaseline='alphabetic';c.textAlign='left';c.font='44px Anton';c.fillStyle='#fff';c.fillText('REDONDO ',158,104);c.fillStyle='#E3242B';c.fillText('DOS TAZ',158+c.measureText('REDONDO ').width,104);
+  c.font='20px Inter';c.fillStyle='#C9B9BA';c.fillText('Bolão do Major de Singapura 2026',158,134);
+  const hm2=heroMatch(),stg=(hm2?.stage||'Major').split('·')[0].trim().toUpperCase();c.font='800 18px Inter';const sw=c.measureText(stg).width+32;c.fillStyle='#E3242B';rr(c,W-64-sw,82,sw,40,10);c.fill();c.fillStyle='#fff';c.fillText(stg,W-64-sw+16,108);
+  // foto
+  const cx=540,cy=342,R=150;let ring;try{ring=c.createConicGradient(3.5,cx,cy);ring.addColorStop(0,'#E3242B');ring.addColorStop(.3,'#FFB547');ring.addColorStop(.6,'#E3242B');ring.addColorStop(.8,'#6E0A10');ring.addColorStop(1,'#E3242B')}catch(e){ring='#E3242B'}
+  c.fillStyle=ring;c.beginPath();c.arc(cx,cy,R+14,0,7);c.fill();c.fillStyle='#0A0A0C';c.beginPath();c.arc(cx,cy,R+6,0,7);c.fill();
+  const av=b.avatar&&window.redondoAvatarUrl?await loadImg(window.redondoAvatarUrl(b.id,b.avatar),true):null;
+  c.save();c.beginPath();c.arc(cx,cy,R,0,7);c.clip();if(av)c.drawImage(av,cx-R,cy-R,2*R,2*R);else{const ag=c.createLinearGradient(cx-R,cy-R,cx+R,cy+R);ag.addColorStop(0,'#7A1015');ag.addColorStop(1,'#2A0B0D');c.fillStyle=ag;c.fillRect(cx-R,cy-R,2*R,2*R);c.fillStyle='#fff';c.font='130px Anton';c.textAlign='center';c.textBaseline='middle';c.fillText(initials(nameOf(b)),cx,cy+6)}c.restore();
+  c.fillStyle='#E3242B';c.strokeStyle='#0A0A0C';c.lineWidth=6;c.beginPath();c.arc(cx+122,cy+98,52,0,7);c.fill();c.stroke();c.fillStyle='#fff';c.font='44px Anton';c.textAlign='center';c.textBaseline='middle';c.fillText((pos||'—')+'º',cx+122,cy+100);
+  // nome
+  c.textBaseline='alphabetic';c.font='88px Anton';let nm=nameOf(b).toUpperCase();while(c.measureText(nm).width>940&&nm.length>3)nm=nm.slice(0,-1);c.fillStyle='#F5F2F2';c.fillText(nm,cx,cy+R+30+80);
+  c.font='700 24px Inter';c.fillStyle='#FFB547';try{c.letterSpacing='3px'}catch(e){}c.fillText(pos===1&&s.pts>0?'LÍDER DO REDONDO':(pos?pos+'º LUGAR NO REDONDO':'NO REDONDO'),cx,cy+R+30+80+42);try{c.letterSpacing='0px'}catch(e){}
+  // números
+  const sy=696,bw=(W-128-42)/4,st=[[s.pts,'pontos','#E3242B'],[s.acc+'%','de acerto','#fff'],[s.best,'melhor sequência','#FFB547'],[s.ex,'placares exatos','#fff']];
+  st.forEach(([v,l,col],i)=>{const x=64+i*(bw+14);c.fillStyle='rgba(0,0,0,.45)';rr(c,x,sy,bw,130,22);c.fill();c.strokeStyle='#3A2224';c.lineWidth=2;c.stroke();c.fillStyle=col;c.font='64px Anton';c.fillText(String(v),x+bw/2,sy+76);c.fillStyle='#C9B9BA';c.font='18px Inter';c.fillText(l,x+bw/2,sy+108)});
+  // medalhas
+  c.textAlign='left';c.font='30px Anton';c.fillStyle='#fff';c.fillText('MEDALHAS',64,900);const mw=c.measureText('MEDALHAS').width;c.font='20px Inter';c.fillStyle='#A39A9B';const ct=g.size+' de '+MEDALS.length;c.fillText(ct,64+mw+14,900);
+  const lx=64+mw+28+c.measureText(ct).width,lg=c.createLinearGradient(lx,0,W-64,0);lg.addColorStop(0,'#E3242B');lg.addColorStop(1,'rgba(227,36,43,0)');c.fillStyle=lg;c.fillRect(lx,892,W-64-lx,2);
+  const ord=[...MEDALS.filter(M=>g.has(M.k)),...MEDALS.filter(M=>!g.has(M.k))],cols=4,cw=(W-128)/cols;
+  for(let i=0;i<ord.length;i++){const M=ord[i],col=i%cols,row=Math.floor(i/cols),x=64+col*cw+cw/2,y=930+row*160;
+    const im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(medalSVG(M.k,'k'+M.k,208,!g.has(M.k),M.n).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ')));if(im)c.drawImage(im,x-52,y,104,104);
+    c.textAlign='center';c.font='18px Anton';c.fillStyle=g.has(M.k)?'#F5F2F2':'#5E5557';c.fillText(M.n,x,y+128)}
+  // rodapé
+  c.fillStyle='#3A2224';c.fillRect(64,1262,W-128,1);c.textAlign='left';c.font='20px Inter';c.fillStyle='#A39A9B';c.fillText('Em jogo: ',64,1304);c.font='700 20px Inter';c.fillStyle='#fff';c.fillText('R$ '+pot+' na skin',64+c.measureText('Em jogo: ').width+2,1304);
+  c.textAlign='right';c.font='20px Inter';c.fillStyle='#A39A9B';c.fillText('Faça seu palpite no Redondo',W-64,1304);
+  return new Promise(ok=>cv.toBlob(ok,'image/png'))}
+let cardBlob=null;
+$('#pfCard').addEventListener('click',async()=>{const btn=$('#pfCard');btn.disabled=true;btn.textContent='Gerando…';
+  try{cardBlob=await makeCard();if(!cardBlob)throw new Error('sem dados');const u=URL.createObjectURL(cardBlob);$('#cardImg').src=u;$('#cardDl').href=u;
+    const f=new File([cardBlob],'redondo-dos-taz.png',{type:'image/png'});$('#cardShare').hidden=!(navigator.canShare&&navigator.canShare({files:[f]}));$('#cardModal').hidden=false}
+  catch(e){toast('Não deu para gerar o card.')}btn.disabled=false;btn.textContent='Gerar meu card'});
+$('#cardShare').addEventListener('click',async()=>{try{await navigator.share({files:[new File([cardBlob],'redondo-dos-taz.png',{type:'image/png'})],text:'Meu Redondo dos Taz 🔥'})}catch(e){}});
+$('#cardClose').addEventListener('click',()=>{$('#cardModal').hidden=true});
+$('#cardModal').addEventListener('click',e=>{if(e.target.id==='cardModal')$('#cardModal').hidden=true});
+
+function renderAll(){show();renderStatus();renderUpcoming();renderRank();renderPast();renderAdmin();renderMe();renderProfile();renderMedals()}
 
 /* saving picks */
 async function flush(){if(saving){again=true;return}saving=true;$('#saveState').textContent='Salvando…';
