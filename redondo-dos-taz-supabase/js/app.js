@@ -240,7 +240,7 @@ function renderLive(visible){
   renderMini(live,visible);
   if(!visible){if(lvShown){$('#lvFrame').innerHTML='';lvShown=''}return}
   const ss=streams(),cur=ss.find(s=>s.n===lvSel)||ss[0];
-  $('#lvBadge').innerHTML=live.length?LIVE:'<span class="off">OFFLINE</span>';$('#lvName').textContent=cur?cur.n:'';
+  $('#lvBadge').innerHTML=live.length?LIVE:'';$('#lvName').innerHTML=cur?esc(cur.n)+' <a class="lv-ext" href="'+(cur.t==='twitch'?'https://www.twitch.tv/':'https://kick.com/')+encodeURIComponent(cur.c)+'" target="_blank" rel="noopener">Abrir na '+(cur.t==='twitch'?'Twitch':'Kick')+' ↗</a>':'';
   $('#lvChannels').innerHTML=ss.map(s=>'<button class="chip'+(s===cur?' on':'')+'" data-stream="'+esc(s.n)+'">'+esc(s.n)+'</button>').join('');
   const src=cur?srcOf(cur):'';
   if(src!==lvShown){lvShown=src;$('#lvFrame').innerHTML=src?'<iframe src="'+esc(src)+'" allowfullscreen allow="autoplay; fullscreen" title="Transmissão ao vivo"></iframe>':''}
