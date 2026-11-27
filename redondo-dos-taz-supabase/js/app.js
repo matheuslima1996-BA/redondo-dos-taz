@@ -141,7 +141,7 @@ function renderPast(){
   const g=groupByDay(list),b=mine();
   $('#past').innerHTML=Object.keys(g).sort().reverse().map(k=>'<div class="day-h"><h2>'+esc(k==='sem data'?'—':dayLabel(k).toUpperCase())+'</h2></div><div class="mlist two">'+g[k].map(m=>doneCard(m,b)).join('')+'</div>').join('')}
 
-function renderAdmin(){if(!isOwner)return;renderLogos();renderAdmins();
+function renderAdmin(){if(!isOwner)return;renderLogos();renderAdmins();renderLvMap();
   const s=$('#aWho'),cur=s.value||editId;
   s.innerHTML='<option value="'+esc(me)+'">Eu</option>'+bets.filter(b=>b.id!==me).map(b=>'<option value="'+esc(b.id)+'">'+esc(nameOf(b))+'</option>').join('');
   s.value=cur;
