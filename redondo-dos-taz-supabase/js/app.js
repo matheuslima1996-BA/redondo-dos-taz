@@ -67,7 +67,7 @@ function bigTeam(n){return '<div class="ht">'+tag(n)+'<span>'+esc(n)+'</span></d
 function renderHero(){const m=heroMatch(),el=$('#hero');if(!m){el.innerHTML='';return}
   const b=mine(),p=b?.picks?.[m.id],lk=locked(m);
   let right;
-  if(m.live)right='<div class="hr-r"><a class="hr-btn watch" href="#aovivo">▶ Assistir ao vivo</a><span class="hr-l">Placar agora (mapas)</span><div class="hr-score">'+esc(scoreAB(m))+'</div>'+(mapTxt(m)?'<span class="hr-map">'+esc(mapTxt(m))+'</span>':'')+(p?'<span class="hr-mine">Seu palpite: '+esc(m[p.w])+(p.s?' '+esc(p.s):'')+'</span>':'')+'</div>';
+  if(m.live)right='<div class="hr-r"><button class="hr-btn watch" data-stream="'+esc((chOf(m)[0]||curStream()||{}).n||'')+'">▶ Assistir'+(chOf(m)[0]?' no '+esc(chOf(m)[0].n):' ao vivo')+'</button><span class="hr-l">Placar agora (mapas)</span><div class="hr-score">'+esc(scoreAB(m))+'</div>'+(mapTxt(m)?'<span class="hr-map">'+esc(mapTxt(m))+'</span>':'')+(p?'<span class="hr-mine">Seu palpite: '+esc(m[p.w])+(p.s?' '+esc(p.s):'')+'</span>':'')+'</div>';
   else if(!lk)right='<div class="hr-r"><span class="hr-l">Palpites fecham em</span><div class="cd" data-cd="'+lockAt(m)+'"></div>'+(p?'<span class="hr-mine">Seu palpite: '+esc(m[p.w])+(p.s?' '+esc(p.s):'')+'</span>':'<a class="hr-btn" href="#m-'+esc(m.id)+'">Dar meu palpite →</a>')+'</div>';
   else right='<div class="hr-r"><span class="hr-l">Começa em</span><div class="cd" data-cd="'+Date.parse(m.start)+'"></div><span class="hr-mine">Palpites fechados</span></div>';
   el.innerHTML='<div class="hero2"><div class="hr-l-col"><span class="hr-tag">'+(m.live?LIVE+' ':'PRÓXIMO JOGO · ')+esc(m.stage||'')+' · MD'+esc(m.bo||1)+' · '+esc(m.pts||1)+' PTS</span>'+
@@ -231,31 +231,39 @@ $('#meBtn').addEventListener('click',()=>{location.hash='perfil'});
 /* ---- Ao vivo (transmissão) ---- */
 var DEF_STREAMS=[{n:'Gaules',t:'kick',c:'gaules'},{n:'Polex',t:'kick',c:'polex'},{n:'PGL',t:'kick',c:'pgl'}];
 function streams(){return Array.isArray(cfg?.streams)&&cfg.streams.length?cfg.streams:DEF_STREAMS}
-var lvSel=null,lvShown='',miniShown='',miniOff='';
+var lvSel=null,lvPick=null,lvShown='',miniShown='',miniOff='';
 try{lvSel=localStorage.getItem('redondo-stream')}catch(e){}
 var srcOf=s=>s.t==='twitch'?'https://player.twitch.tv/?channel='+encodeURIComponent(s.c)+'&parent='+encodeURIComponent(location.hostname||'localhost')+'&autoplay=true&muted=true'
   :'https://player.kick.com/'+encodeURIComponent(s.c)+'?autoplay=true&muted=true';
+function chOf(m){const ss=streams(),ch=(m.ch||[]).map(x=>String(x).toLowerCase());return ss.filter(s=>ch.includes(String(s.c).toLowerCase()))}
+function liveSorted(){const b=mine();return matches.filter(m=>m.live&&!m.winner).sort((x,y)=>(b?.picks?.[y.id]?1:0)-(b?.picks?.[x.id]?1:0))}
+function matchOfStream(s,live){return live.find(m=>chOf(m).includes(s))||null}
+/* canal: escolha feita agora > canal do jogo em que você palpitou > canal salvo > primeiro da lista */
+function curStream(){const ss=streams(),live=liveSorted();
+  if(lvPick){const p=ss.find(s=>s.n===lvPick);if(p)return p}
+  for(const m of live){const c=chOf(m);if(c.length)return c.find(s=>s.n===lvSel)||c[0]}
+  return ss.find(s=>s.n===lvSel)||ss[0]}
+function watchBtns(m){const c=chOf(m);return c.length?'<div class="lv-w">'+c.map(s=>'<button class="hr-btn watch sm" data-stream="'+esc(s.n)+'">▶ Assistir no '+esc(s.n)+'</button>').join('')+'</div>':'<div class="note">Canal ainda não identificado: escolha acima.</div>'}
 function renderLive(visible){
-  const live=matches.filter(m=>m.live&&!m.winner);$('#tabLive').classList.toggle('has-live',live.length>0);
+  const live=liveSorted();$('#tabLive').classList.toggle('has-live',live.length>0);
   renderMini(live,visible);
   if(!visible){if(lvShown){$('#lvFrame').innerHTML='';lvShown=''}return}
-  const ss=streams(),cur=ss.find(s=>s.n===lvSel)||ss[0];
+  const ss=streams(),cur=curStream();
   $('#lvBadge').innerHTML=live.length?LIVE:'';$('#lvName').innerHTML=cur?esc(cur.n)+' <a class="lv-ext" href="'+(cur.t==='twitch'?'https://www.twitch.tv/':'https://kick.com/')+encodeURIComponent(cur.c)+'" target="_blank" rel="noopener">Abrir na '+(cur.t==='twitch'?'Twitch':'Kick')+' ↗</a>':'';
-  $('#lvChannels').innerHTML=ss.map(s=>'<button class="chip'+(s===cur?' on':'')+'" data-stream="'+esc(s.n)+'">'+esc(s.n)+'</button>').join('');
+  $('#lvChannels').innerHTML=ss.map(s=>{const mm=matchOfStream(s,live);return '<button class="chip'+(s===cur?' on':'')+'" data-stream="'+esc(s.n)+'">'+esc(s.n)+(mm?' <small>· '+esc(mm.a)+' x '+esc(mm.b)+'</small>':'')+'</button>'}).join('');
   const src=cur?srcOf(cur):'';
   if(src!==lvShown){lvShown=src;$('#lvFrame').innerHTML=src?'<iframe src="'+esc(src)+'" allowfullscreen allow="autoplay; fullscreen" title="Transmissão ao vivo"></iframe>':''}
   const b=mine(),nx=matches.filter(m=>!m.winner&&!m.live&&Date.parse(m.start)>Date.now()).sort((x,y)=>Date.parse(x.start)-Date.parse(y.start));
   $('#lvNote').textContent=live.length?'O player começa sem som: toque nele para ativar o áudio.':(nx[0]?'Nenhum jogo ao vivo agora. Próximo: '+nx[0].a+' x '+nx[0].b+' · '+when(nx[0].start)+'.':'Nenhum jogo ao vivo agora.');
-  $('#lvNow').innerHTML=live.length?live.map(m=>{const p=b?.picks?.[m.id];return '<div class="lv-m"><div class="lv-mt">'+LIVE+'<span class="note">'+esc(m.stage||'')+' · MD'+esc(m.bo||1)+'</span></div><div class="rs">'+'<span class="rs-t">'+tag(m.a)+'<b>'+esc(m.a)+'</b></span><span class="rs-sc">'+esc(scoreAB(m))+'</span><span class="rs-t">'+tag(m.b)+'<b>'+esc(m.b)+'</b></span></div>'+(mapTxt(m)?'<div class="note">'+esc(mapTxt(m))+'</div>':'')+'<div class="note">'+(p?'Seu palpite: <b>'+esc(m[p.w])+(p.s?' '+esc(p.s):'')+'</b>':'Você não palpitou neste jogo')+'</div>'+crowd(m)+'</div>'}).join(''):'<p class="note">Sem jogos rolando agora.</p>';
+  $('#lvNow').innerHTML=live.length?live.map(m=>{const p=b?.picks?.[m.id];return '<div class="lv-m"><div class="lv-mt">'+LIVE+'<span class="note">'+esc(m.stage||'')+' · MD'+esc(m.bo||1)+'</span></div><div class="rs">'+'<span class="rs-t">'+tag(m.a)+'<b>'+esc(m.a)+'</b></span><span class="rs-sc">'+esc(scoreAB(m))+'</span><span class="rs-t">'+tag(m.b)+'<b>'+esc(m.b)+'</b></span></div>'+(mapTxt(m)?'<div class="note">'+esc(mapTxt(m))+'</div>':'')+'<div class="note">'+(p?'Seu palpite: <b>'+esc(m[p.w])+(p.s?' '+esc(p.s):'')+'</b>':'Você não palpitou neste jogo')+'</div>'+watchBtns(m)+crowd(m)+'</div>'}).join(''):'<p class="note">Sem jogos rolando agora.</p>';
   $('#lvNext').innerHTML=nx.slice(0,4).map(m=>'<div class="pd-row"><span>'+esc(m.a)+' x '+esc(m.b)+'</span><b>'+esc(when(m.start))+'</b></div>').join('')||'<p class="note">Os próximos jogos aparecem quando os confrontos forem definidos.</p>'}
-document.addEventListener('click',e=>{const s=e.target.closest('[data-stream]');if(!s)return;lvSel=s.dataset.stream;try{localStorage.setItem('redondo-stream',lvSel)}catch(x){}renderLive(true)});
-function curStream(){const ss=streams();return ss.find(s=>s.n===lvSel)||ss[0]}
+document.addEventListener('click',e=>{const s=e.target.closest('[data-stream]');if(!s)return;lvSel=lvPick=s.dataset.stream;if(!$('#v-aovivo').classList.contains('on')){location.hash='aovivo';return}try{localStorage.setItem('redondo-stream',lvSel)}catch(x){}renderLive(true)});
 function renderMini(live,onTab){const box=$('#miniLive');if(!box)return;
   const key=live.map(m=>m.id).join(',');let off='';try{off=sessionStorage.getItem('redondo-mini-off')||''}catch(e){}
   const show=live.length&&!onTab&&off!==key&&!needLogin();
   box.hidden=!show;
   if(!show){if(miniShown){$('#miniFrame').innerHTML='';miniShown=''}return}
-  const m=live[0],s=curStream();
+  const s=curStream(),m=(s&&matchOfStream(s,live))||live[0];
   $('#miniInfo').innerHTML=LIVE+'<span class="mini-sc"><b>'+esc(m.a)+'</b> '+esc(scoreAB(m))+' <b>'+esc(m.b)+'</b></span>'+(live.length>1?'<span class="note">+'+(live.length-1)+'</span>':'');
   $('#miniCh').textContent=s?s.n:'';
   const src=s?srcOf(s):'';if(src!==miniShown){miniShown=src;$('#miniFrame').innerHTML=src?'<iframe src="'+esc(src)+'" allowfullscreen allow="autoplay; fullscreen" title="Transmissão ao vivo"></iframe>':''}}
@@ -264,7 +272,15 @@ $('#miniOpen').addEventListener('click',()=>{location.hash='aovivo'});
 $('#lvSave').addEventListener('click',async()=>{const list=$('#lvCfg').value.split('\n').map(l=>l.split('|').map(x=>x.trim())).filter(x=>x.length>=3&&x[0]&&x[2]).map(([n,t,c])=>({n,t:/twitch/i.test(t)?'twitch':'kick',c:c.replace(/^https?:\/\/(www\.)?(kick\.com|twitch\.tv)\//i,'').replace(/\/.*$/,'')}));
   if(!list.length){toast('Nenhum canal válido.');return}
   try{await db.doc('league/config').update({streams:list});toast('Canais salvos.')}catch(e){toast('Não deu para salvar.')}});
-function fillLiveCfg(){const t=$('#lvCfg');if(t&&document.activeElement!==t)t.value=streams().map(s=>s.n+' | '+s.t+' | '+s.c).join('\n')}
+function renderLvMap(){const el=$('#lvMap');if(!el||!isOwner)return;
+  const now=Date.now(),list=matches.filter(m=>!m.winner&&m.start&&(m.live||Math.abs(Date.parse(m.start)-now)<12*3600e3)).sort((x,y)=>Date.parse(x.start)-Date.parse(y.start));
+  const ss=streams();
+  el.innerHTML=list.map(m=>{const c=chOf(m),v=m.chManual?(c[0]?.c||''):'';
+    return '<div class="rrow"><div><b>'+esc(m.a)+' x '+esc(m.b)+'</b><div class="when">'+(m.live?'AO VIVO':esc(hm(m.start)))+' · agora: '+(c.length?esc(c.map(s=>s.n).join(', ')):'—')+(m.chManual?' (manual)':'')+'</div></div>'+
+    '<select data-chid="'+esc(m.id)+'" aria-label="Canal"><option value="">Automático</option>'+ss.map(s=>'<option value="'+esc(s.c)+'"'+(v===s.c?' selected':'')+'>'+esc(s.n)+'</option>').join('')+'</select></div>'}).join('')||'<p class="note">Nenhum jogo nas próximas horas.</p>'}
+$('#lvMap').addEventListener('change',async e=>{const s=e.target.closest('[data-chid]');if(!s)return;
+  const v=s.value;try{await db.doc('matches/'+s.dataset.chid).update(v?{ch:[v],chManual:true}:{chManual:false});toast(v?'Canal definido.':'Voltou para o automático.')}catch(x){toast('Não deu para salvar.')}});
+function fillLiveCfg(){renderLvMap();const t=$('#lvCfg');if(t&&document.activeElement!==t)t.value=streams().map(s=>s.n+' | '+s.t+' | '+s.c).join('\n')}
 
 /* ---- Medalhas (conquistas) ---- */
 const DECISIVE=m=>/vale vaga|elimina|Quartas|Semifinal|3º lugar|Final/i.test(m.stage||'')||(m.pts||1)>=2;
