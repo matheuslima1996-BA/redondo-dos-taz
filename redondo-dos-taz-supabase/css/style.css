@@ -359,3 +359,5 @@ button.hr-btn{border:0;cursor:pointer;font:inherit}
 .chip small{opacity:.75;font-weight:500}
 .lv-h3{margin:18px 0 4px;font-size:15px}
 #lvMap select{min-width:130px}
+
+#lvCfg{width:100%;box-sizing:border-box;font-family:ui-monospace,monospace;font-size:13px;padding:10px;border-radius:10px}
