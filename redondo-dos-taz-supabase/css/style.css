@@ -349,3 +349,5 @@ table th{color:var(--mute)}
 .mini-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .mini-foot{display:flex;justify-content:space-between;gap:8px;padding:6px 12px 8px;font-size:12px;font-weight:700}
 @media(max-width:760px){.mini-live{left:auto;right:10px;bottom:84px;width:62vw;border-radius:14px}.mini-foot{display:none}.mini-sc{display:none}.mini-head{padding:6px 6px 6px 8px}.mini-btn{width:34px;height:34px}}
+.lv-ext{margin-left:8px;font-size:13px;font-weight:600;color:#FF4D52;text-decoration:none}
+.lv-ext:hover{color:#fff}
